@@ -12,9 +12,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #define MAX 256                     // maximum input line length
 #define CMD_MAX 10                  // maximum commands per line
+
 
 #endif /* UNIFIEDHEADER_H_ */

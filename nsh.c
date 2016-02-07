@@ -9,6 +9,7 @@
  */
 
 #include "unifiedHeader.h"
+#include "stack.c"
 
 #define HISTORY_MAX 10
 static const char * commandHistory[HISTORY_MAX];         // array to hold previously issues commands
@@ -143,6 +144,33 @@ int commandLoop()
 
 int main()
 {
+	int command = 0;
+	while (command != 3)
+	    {
+	        printf("Enter your choice:\n1) Push integer\n2) Pop Integer\n3) Quit.\n");
+	        scanf("%d",&command);
+	        if (command == 1)
+	        {
+	            // push
+	            int num;
+	            scanf("%d",&num);
+	            push(num);
+	        }
+	        else
+	        {
+	            if (command == 2)
+	            {
+	                pop();
+	            }
+	            else
+	            {
+	                if (command != 3)
+	                {
+	                    printf("Command not understood.\n");
+	                }
+	            }
+	        }
+	    }
     commandLoop();
 
     return 0;
