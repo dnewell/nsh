@@ -79,4 +79,8 @@ fabric.properties
 *.hex
 
 # Debug files
-*.dSYM/
+*.dSYM/.cproject
+.project
+.cproject
+.settings/
+nsh
