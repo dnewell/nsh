@@ -1,12 +1,5 @@
-P=nsh
-OBJECTS=
-CFLAGS= -g -o3 -Wall -Werror
-LDLIBS=
-CC=c99
-TARGET=$(P)
-
 all:
-	(TARGET): $(OBJECTS)
+	gcc -g -o3 -Wall -Werror -o nsh nsh.c
 
 clean:
 	$(RM) $(TARGET)

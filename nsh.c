@@ -1,86 +1,149 @@
-/**
- *  nsh is a simple POSIX-compatible shell written by David Newell.
- *
- * 	Author: David Newell
- * 	SN: 250332100
- * 	For: Professor Hanan Lutfiyya
+/*
+ *      Author: David Newell
+ *      SN: 250332100
+ *      For: Professor Hanan Lutfiyya
  */
-#include "unifiedHeader.h"
 
 /*
- *      This helper function reads/gets an input line from stdin.
+ * Includes
  */
-char* get_line(void) {
 
-	return "asd";
-}
+#include "unifiedHeader.h"
 
-/**
- *      makeTokenList takes an input string, and inserts each of the space delimited tokens it contains
- *      into an array.
- *
- *      The function takes as its input the following:
- *          inputBuffer: representation of  the string for which the tokens are to be determined for
- *          tokenArray: representation of the array that the found tokens are to put into
- *
- *      strtok() is used to extract the tokens, which are delimited by a space
- *
- *      This tokenizing code is used with permission from:
- *      http://www.csd.uwo.ca/courses/CS3305b/Assignments/token.c
+#define HISTORY_MAX 10
+static const char * commandHistory[HISTORY_MAX];         // array to hold previously issues commands
+int8_t              currentHistorySize	= 0;             // number of commands issued this session
+const char *        PROMPT		= "dnewell>";    // string to display for prompt
+
+/*
+ *      This helper function gets a line of user input from stdin.
  */
-int_fast16_t makeTokenList(char *inputBuffer, char *tokenArray[]) {
-
-	char *line;
-	int_fast16_t argCount = 0;
-
-	line = inputBuffer;
-	tokenArray[argCount] = strtok(line, " ");
-
-	do {
-		argCount++;
-		line = NULL;
-		tokenArray[argCount] = strtok(line, " ");
-	} while (tokenArray[argCount] != NULL);
-
-	return argCount;
+char * get_line(void)
+{
+    return "asd";
 }
 
-int main() {
-	const char* PROMPT = "n#";
-	const char* EXIT_TOKEN = "exit";
+/*
+ *      This function takes as input a string, and adds it to the commandHistory.
+ *      TODO: Implement a history data structure using a circular buffer/queue
+ */
+void addToHistory(const char * lineToAdd)
+{
+    printf("added to history: %s", lineToAdd);
 
-	//char* line;
-	//pid_t pid;
+    commandHistory[currentHistorySize]	= lineToAdd;
 
-	char input_line[MAX], *tokenArray[CMD_MAX];
+    int8_t i;
 
+    for (i = 0; i < currentHistorySize; i++)
+    {
+        printf("%s\n", commandHistory[i]);
+    }
 
-
-	while (1) {
-		printf("%s", PROMPT);
-
-		int_fast16_t n;
-
-		if (fgets(input_line, MAX, stdin) != NULL){
-			n = makeTokenList(input_line, tokenArray);
-		}
-		else {
-
-		}
-			printf("error: no input\n");
-
-		int_fast16_t i;
-		for (i = 0; i < n; i++)
-			printf("extracted token is %s\n", tokenArray[i]);
-
-
-		// TODO: exit loop on "exit" token
-//        printf("n = %i, tokenArray = %s, exitToken = %s\n", n, tokenArray[0], EXIT_TOKEN);
-		if (n == 1) {
-			printf("%i", strcmp(tokenArray[0], EXIT_TOKEN));
-			break;
-		}
-	}
-	return 0;
+    currentHistorySize++;
 }
 
+/*
+ * This function displays the last 10 commands entered.
+ * TODO: Implement a history data structure using a circular buffer/queue
+ */
+void displayHistory()
+{
+    // int value;
+    if (currentHistorySize == 0)
+    {
+        return;    // no commands have been entered.
+    }
+    else
+    {
+        int8_t i;
+
+        // print 1 - 10 commands
+        if (currentHistorySize < 10)
+        {
+            for (i = 0; i < currentHistorySize; i++)
+            {
+                printf("%s\n", commandHistory[i]);
+            }
+        }
+
+        // else
+        // {
+        // int temp        = currentHistorySize;
+        //
+        // for (h = (temp - 10); h < 10; h++)
+        // {
+        // printf("%s\n", commandHistory[h]);
+        // }
+        // }
+    }
+}
+
+int_fast16_t makeTokenList(char * inputBuffer,
+                           char * tokenArray[])
+{
+    char *       line;
+    int_fast16_t argCount	= 0;
+
+    line					= inputBuffer;
+    tokenArray[argCount]	= strtok(line, " ");
+
+    do
+    {
+        argCount++;
+
+        line					= NULL;
+        tokenArray[argCount]	= strtok(line, " ");
+    }
+    while (tokenArray[argCount] != NULL);
+
+    return argCount;
+}
+
+int commandLoop()
+{
+    char input_line[MAX], *tokenArray[CMD_MAX];
+
+    while (1)
+    {
+        printf("%s", PROMPT);
+
+        int_fast16_t n;
+
+        if (*fgets(input_line, MAX, stdin) != '\n')           // error handling
+        {
+            n	= makeTokenList(input_line, tokenArray);    // tokenArray contains all arguments from user's input line
+
+            if (strcmp(input_line, "exit\n") == 0)            // check for built-in termination command 'exit'
+            {
+                return 0;
+            }
+            else if (strcmp(input_line, "history\n") == 0)    // check for built-in termination command 'history'
+            {
+                displayHistory();
+            }
+            else
+            {
+                addToHistory(input_line);
+
+                // TODO run commands
+                int_fast16_t i;
+
+                for (i = 0; i < n; i++)
+                {
+                    printf("will run command %s\n", tokenArray[i]);
+                    printf("line: %s", input_line);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int main()
+{
+    commandLoop();
+
+    return 0;
+}
