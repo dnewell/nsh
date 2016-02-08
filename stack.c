@@ -8,41 +8,42 @@
 
 #include "unifiedHeader.h"
 
-// Data structure definition
-struct listElement {
-	char *s;
-	struct listElement *next;  // Yes the definition can be recursive!
+
+/* NODE DATA DEFINITION (RECURSIVE) */
+struct node {
+	char *string;
+	struct node *next;
 };
 
-struct listElement *tos=NULL; // the top of the stack. Global variable.
+/* GLOBALS */
+struct node *topOfStack=NULL; // the top of the stack. Global variable.
 
 
-/* --------------------------------------------------------------------------
- * function push: Enter string s into the stack.
- *  Space must be allocated for the string.
- * --------------------------------------------------------------------------
+/**
+ * push functions pushes a string onto the stack
+ *  TODO: DEL: (Space must be allocated for the string.
+ *
  */
-void push(char *s)
+void push(const char *strToPush)
 {
-	char *p;
-	struct listElement *q;
+	char *data;
+	struct node *currentNode;
 
 	// Allocate memory for the string
-    if ((p=malloc((strlen(s)+1)*sizeof(char))) == NULL) {
+    if ((data=malloc((strlen(strToPush)+1)*sizeof(char))) == NULL) {
 		printf("Fatal memory allocation error.\n");
 		exit(1);  // Exit the program with error
 	}
-	strcpy(p, s); // Copy the string
+	strcpy(data, strToPush); // Copy the string
 
-	// Allocate memory for another listElement
-    if ((q=malloc(sizeof(struct listElement))) == NULL) {
-		printf("Fatal memory allocation error.\n");
-		exit(1);  // Exit the program with error
+
+if ((currentNode=malloc(sizeof(struct node))) == NULL) {					// allocate memory for a node, and check for malloc error
+    	printf("Fatal memory allocation error.\n");
+		exit(1);  															// program exits if allocation fails
 	}
-	q->s = p;  // add pointer to string into the list element
-    // Note: q->s  is a shortcut for  (*q).s
-	q->next = tos; // link to next element.
-	tos = q;  // Top of stack now points to new element
+	(*currentNode).string = data;  											// string pointer added to the list
+	(*currentNode).next = topOfStack; // link to next element.
+	topOfStack = currentNode;  // Top of stack now points to new element
 }
 
 /* --------------------------------------------------------------------------
@@ -52,35 +53,25 @@ void push(char *s)
  */
 char *pop(void)
 {
-	char *p;
-	struct listElement *q;
-
-	if (tos == NULL)
-		return NULL;
-	q = tos;
-    tos = tos->next; // Top of stack points to next element
-	p = q->s;
-	free(q); // Release memory occupied by the poped listElement
-	return p;
-}
+	char *data;
+	struct node *currentNode;
 
 
-int main(void)
-{
-	char s[100];
-	char *p;
-
-	do {
-		scanf("%s", s); // read a string from keyboard
-		push(s);
-	} while (strlen(s) != 1); // exit if a single char string is read
-
-	// Pop everything out of the stack and print:
-	while ((p=pop()) != NULL) {
-		printf("%s\n", p); // print string and change line.
-		free(p);  // Release the memory used by the string
+	if (topOfStack)
+	{
+		currentNode = topOfStack;
+	    topOfStack = (*topOfStack).next; 									// make the top of stack point to the next element in list
+	    data = (*currentNode).string;									//
+		free(currentNode); 													// must always give as we've taken
+		return data;
+	}
+	else
+	{
+	return NULL;
 	}
 }
+
+
 
 
 ///*

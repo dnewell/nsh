@@ -28,20 +28,35 @@ char * get_line(void)
  *      This function takes as input a string, and adds it to the commandHistory.
  *      TODO: Implement a history data structure using a circular buffer/queue
  */
-void addToHistory(const char * lineToAdd)
+void addToHistory(char * lineToAdd)
 {
-    printf("added to history: %s", lineToAdd);
-
-    commandHistory[currentHistorySize]	= lineToAdd;
-
-    int8_t i;
-
-    for (i = 0; i < currentHistorySize; i++)
-    {
-        printf("%s\n", commandHistory[i]);
-    }
-
+	push(lineToAdd);
     currentHistorySize++;
+    printf("added to history: %s", lineToAdd);
+//
+//    commandHistory[currentHistorySize]	= lineToAdd;
+//
+//    int8_t i;
+//
+//    for (i = 0; i < currentHistorySize; i++)
+//    {
+//        printf("%s\n", commandHistory[i]);
+//    }
+//	char s[256];
+//	char *p;
+//	strcpy(p, lineToAdd);
+//
+//	do {
+//		scanf("%s", s); // read a string from keyboard
+//		push(s);
+//	} while (strlen(s) != 1); // exit if a single char string is read
+//
+//	// Pop everything out of the stack and print:
+//	while ((p=pop()) != NULL) {
+//		printf("%s\n", p); // print string and change line.
+//		free(p);  // Release the memory used by the string
+//	}
+
 }
 
 /*
@@ -109,17 +124,15 @@ int commandLoop()
     {
         printf("%s", PROMPT);
 
-        int_fast16_t n;
-
-        if (*fgets(input_line, MAX, stdin) != '\n')           // error handling
+        if (*fgets(input_line, MAX, stdin) != '\n')           						// if input is \n, the user hit enter without entering a command
         {
-            n	= makeTokenList(input_line, tokenArray);    // tokenArray contains all arguments from user's input line
+        	int_fast16_t numberToks = makeTokenList(input_line, tokenArray);    	// tokenArray contains all arguments from user's input line
 
-            if (strcmp(input_line, "exit\n") == 0)            // check for built-in termination command 'exit'
+            if (strcmp(input_line, "exit\n") == 0)            						// check for built-in command 'exit'
             {
-                return 0;
+                return 0;															// user requests exit
             }
-            else if (strcmp(input_line, "history\n") == 0)    // check for built-in termination command 'history'
+            else if (strcmp(input_line, "history\n") == 0)    						// check for built-in command 'history'
             {
                 displayHistory();
             }
@@ -130,7 +143,7 @@ int commandLoop()
                 // TODO run commands
                 int_fast16_t i;
 
-                for (i = 0; i < n; i++)
+                for (i = 0; i < numberToks; i++)
                 {
                     printf("will run command %s\n", tokenArray[i]);
                     printf("line: %s", input_line);
@@ -138,40 +151,12 @@ int commandLoop()
             }
         }
     }
-
-    return 0;
+  //  return 0;
 }
 
 int main()
 {
-	int command = 0;
-	while (command != 3)
-	    {
-	        printf("Enter your choice:\n1) Push integer\n2) Pop Integer\n3) Quit.\n");
-	        scanf("%d",&command);
-	        if (command == 1)
-	        {
-	            // push
-	            int num;
-	            scanf("%d",&num);
-	            push(num);
-	        }
-	        else
-	        {
-	            if (command == 2)
-	            {
-	                pop();
-	            }
-	            else
-	            {
-	                if (command != 3)
-	                {
-	                    printf("Command not understood.\n");
-	                }
-	            }
-	        }
-	    }
-    commandLoop();
+	int8_t status = commandLoop();
 
-    return 0;
+    return status;
 }
