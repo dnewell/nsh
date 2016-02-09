@@ -12,7 +12,7 @@
 #include "stack.c"
 
 #define HISTORY_MAX 10
-static const char * commandHistory[HISTORY_MAX];         // array to hold previously issues commands
+//static const char * commandHistory[HISTORY_MAX];         // array to hold previously issues commands
 int8_t              currentHistorySize	= 0;             // number of commands issued this session
 const char *        PROMPT		= "dnewell>";    // string to display for prompt
 
@@ -32,30 +32,8 @@ void addToHistory(char * lineToAdd)
 {
 	push(lineToAdd);
     currentHistorySize++;
-    printf("added to history: %s", lineToAdd);
-//
-//    commandHistory[currentHistorySize]	= lineToAdd;
-//
-//    int8_t i;
-//
-//    for (i = 0; i < currentHistorySize; i++)
-//    {
-//        printf("%s\n", commandHistory[i]);
-//    }
-//	char s[256];
-//	char *p;
-//	strcpy(p, lineToAdd);
-//
-//	do {
-//		scanf("%s", s); // read a string from keyboard
-//		push(s);
-//	} while (strlen(s) != 1); // exit if a single char string is read
-//
-//	// Pop everything out of the stack and print:
-//	while ((p=pop()) != NULL) {
-//		printf("%s\n", p); // print string and change line.
-//		free(p);  // Release the memory used by the string
-//	}
+    printf("++ his: %s", lineToAdd);
+
 
 }
 
@@ -79,7 +57,7 @@ void displayHistory()
         {
             for (i = 0; i < currentHistorySize; i++)
             {
-                printf("%s\n", commandHistory[i]);
+                printf("%s\n", pop());
             }
         }
 
@@ -145,8 +123,8 @@ int commandLoop()
 
                 for (i = 0; i < numberToks; i++)
                 {
-                    printf("will run command %s\n", tokenArray[i]);
-                    printf("line: %s", input_line);
+                    //printf("will run command %s\n", tokenArray[i]);
+                    //printf("line: %s", input_line);
                 }
             }
         }

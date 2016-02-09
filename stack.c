@@ -17,7 +17,7 @@ struct node {
 
 /* GLOBALS */
 struct node *topOfStack=NULL; // the top of the stack. Global variable.
-
+struct node *immutableTop=NULL; //
 
 /**
  * push functions pushes a string onto the stack
@@ -43,6 +43,7 @@ if ((currentNode=malloc(sizeof(struct node))) == NULL) {					// allocate memory 
 	}
 	(*currentNode).string = data;  											// string pointer added to the list
 	(*currentNode).next = topOfStack; // link to next element.
+
 	topOfStack = currentNode;  // Top of stack now points to new element
 }
 
@@ -59,6 +60,33 @@ char *pop(void)
 
 	if (topOfStack)
 	{
+
+		currentNode = topOfStack;
+	    topOfStack = (*topOfStack).next; 									// make the top of stack point to the next element in list
+	    data = (*currentNode).string;									//
+		//free(currentNode); 													// must always give as we've taken
+		return data;
+	}
+	else
+	{
+	return NULL;
+	}
+}
+
+/* --------------------------------------------------------------------------
+ * function popND: "pop" repeatedly, returning the entry of the stack.
+ *      returns the string kept at the top of the stack.
+ * --------------------------------------------------------------------------
+ */
+char *popND(void)
+{
+	char *data;
+	struct node *currentNode;
+
+
+	if (topOfStack)
+	{
+
 		currentNode = topOfStack;
 	    topOfStack = (*topOfStack).next; 									// make the top of stack point to the next element in list
 	    data = (*currentNode).string;									//
