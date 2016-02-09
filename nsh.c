@@ -43,33 +43,21 @@ void addToHistory(char * lineToAdd)
  */
 void displayHistory()
 {
-    // int value;
-    if (currentHistorySize == 0)
+    int linesToPrint;
+    if (currentHistorySize <= 0)
     {
         return;    // no commands have been entered.
     }
     else
     {
-        int8_t i;
+    	(currentHistorySize < 10) ? (linesToPrint = currentHistorySize) : (linesToPrint = 10);
 
-        // print 1 - 10 commands
-        if (currentHistorySize < 10)
-        {
-            for (i = 0; i < currentHistorySize; i++)
-            {
-                printf("%s\n", pop());
-            }
-        }
-
-        // else
-        // {
-        // int temp        = currentHistorySize;
-        //
-        // for (h = (temp - 10); h < 10; h++)
-        // {
-        // printf("%s\n", commandHistory[h]);
-        // }
-        // }
+    	int16_t i;
+		for (i = 0; i < linesToPrint; i++)
+		{
+			printf("%s", pop());
+		}
+		printf("/n");
     }
 }
 
