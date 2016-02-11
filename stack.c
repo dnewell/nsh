@@ -1,5 +1,7 @@
 /*
- * A basic stack implemented using a linked list
+ * A stack implemented using a linked list.
+ * Includes a non-standard function to reset the topOfStack pointer
+ * to the most recently pushed item.
  *
  *      Author: David Newell
  *      SN: 250332100
@@ -9,48 +11,49 @@
 #include "unifiedHeader.h"
 
 
-/* NODE DATA DEFINITION (RECURSIVE) */
+/*
+ * Data structure for a node
+ */
 struct node {
 	char *string;
 	struct node *next;
 };
 
-/* GLOBALS */
-struct node *topOfStack=NULL; // the top of the stack. Global variable.
-struct node *immutableTop=NULL; //
+/*
+ * Globals
+ */
+struct node *topOfStack = NULL;                                             // the top of the stack.
+struct node *permaTop = NULL;
 
 /**
- * push functions pushes a string onto the stack
- *  TODO: DEL: (Space must be allocated for the string.
- *
+ * Function push pushes a string onto the stack
  */
 void push(const char *strToPush)
 {
 	char *data;
 	struct node *currentNode;
 
-	// Allocate memory for the string
-    if ((data=malloc((strlen(strToPush)+1)*sizeof(char))) == NULL) {
-		printf("Fatal memory allocation error.\n");
-		exit(1);  // Exit the program with error
+    if ((data = malloc((strlen(strToPush) + 1) * sizeof(char))) == NULL) {        // catch memory allocation error
+        printf("Error: could not allocate memory.\n");
+        exit(EXIT_FAILURE);
 	}
-	strcpy(data, strToPush); // Copy the string
+    strcpy(data, strToPush);
 
 
-if ((currentNode=malloc(sizeof(struct node))) == NULL) {					// allocate memory for a node, and check for malloc error
+    if ((currentNode = malloc(sizeof(struct node))) ==
+        NULL) {                    // allocates and catches possible error
     	printf("Fatal memory allocation error.\n");
 		exit(1);  															// program exits if allocation fails
 	}
 	(*currentNode).string = data;  											// string pointer added to the list
-	(*currentNode).next = topOfStack; // link to next element.
+    (*currentNode).next = topOfStack;                                       // next element
 
-	topOfStack = currentNode;  // Top of stack now points to new element
+    topOfStack = currentNode;                                               // top of the stack now points to new element
+    permaTop = currentNode;                                                 // set global un-stack-like permanent top variable
 }
 
-/* --------------------------------------------------------------------------
- * function pop: Remove last entry of the stack.
- *      returns the string kept at the top of the stack.
- * --------------------------------------------------------------------------
+/*
+ * Function pop returns the top data item on the stack
  */
 char *pop(void)
 {
@@ -60,11 +63,9 @@ char *pop(void)
 
 	if (topOfStack)
 	{
-
 		currentNode = topOfStack;
-	    topOfStack = (*topOfStack).next; 									// make the top of stack point to the next element in list
-	    data = (*currentNode).string;									//
-		//free(currentNode); 													// must always give as we've taken
+        topOfStack = (*topOfStack).next;
+        data = (*currentNode).string;
 		return data;
 	}
 	else
@@ -73,37 +74,10 @@ char *pop(void)
 	}
 }
 
-/* --------------------------------------------------------------------------
- * function popND: "pop" repeatedly, returning the entry of the stack.
- *      returns the string kept at the top of the stack.
- * --------------------------------------------------------------------------
+/*
+ * Function reset stack returns the pointer to the top of the stack to the
+ * most recent item pushed
  */
-char *popND(void)
-{
-	char *data;
-	struct node *currentNode;
-
-
-	if (topOfStack)
-	{
-
-		currentNode = topOfStack;
-	    topOfStack = (*topOfStack).next; 									// make the top of stack point to the next element in list
-	    data = (*currentNode).string;									//
-		free(currentNode); 													// must always give as we've taken
-		return data;
-	}
-	else
-	{
-	return NULL;
-	}
+void resetStack() {
+    topOfStack = permaTop;
 }
-
-
-
-
-///*
-// * Push:
-// * A canonical stack operation
-// */
-

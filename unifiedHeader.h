@@ -22,7 +22,7 @@
 
 extern char pipeCommands[4][MAX];				// array to contain the three commands we'll be piping
 
-void piper(int numberOfPipes);
-char** tokenizeInput(char* input);
+
+
 
 #endif /* UNIFIEDHEADER_H_ */
