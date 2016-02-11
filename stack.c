@@ -33,7 +33,7 @@ void push(const char *strToPush)
 	char *data;
 	struct node *currentNode;
 
-    if ((data = malloc((strlen(strToPush) + 1) * sizeof(char))) == NULL) {        // catch memory allocation error
+    if ((data = malloc((strlen(strToPush) + 1) * sizeof(char))) == NULL) {   // catch memory allocation error
         printf("Error: could not allocate memory.\n");
         exit(EXIT_FAILURE);
 	}
@@ -41,7 +41,7 @@ void push(const char *strToPush)
 
 
     if ((currentNode = malloc(sizeof(struct node))) ==
-        NULL) {                    // allocates and catches possible error
+        NULL) {                    											// allocates and catches possible error
     	printf("Fatal memory allocation error.\n");
 		exit(1);  															// program exits if allocation fails
 	}
@@ -51,6 +51,8 @@ void push(const char *strToPush)
     topOfStack = currentNode;                                               // top of the stack now points to new element
     permaTop = currentNode;                                                 // set global un-stack-like permanent top variable
 }
+
+
 
 /*
  * Function pop returns the top data item on the stack

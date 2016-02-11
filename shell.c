@@ -1,19 +1,22 @@
-/*
- *      Author: David Newell
- *          SN: 250332100
- *         For: Professor Hanan Lutfiyya
+/**
+ *  shell is a simple POSIX-compatible shell written by David Newell.
+ *
+ * 	Author: David Newell
+ * 	SN: 250332100
+ * 	For: Professor Hanan Lutfiyya
  */
 
 /* INCLUDES */
 #include "unifiedHeader.h"
-#include "nsh.h"
+#include "shell.h"
 #include "stack.h"
 #include "pipes.h"
 
 /* GLOBALS */
-int8_t currentHistorySize = 0;         // number of commands issued this session
-const char *PROMPT = "dnewell>";    // string to display for prompt
-char pipeCommands[4][MAX];
+int8_t currentHistorySize = 0;          // number of commands issued this session
+const char *PROMPT = "dnewell>";        // string to display for prompt
+char pipeCommands[3][MAX];              // holds the commands from between pipes
+char input_line[MAX];                   // holds current line of input from user
 
 
 /*
@@ -22,7 +25,6 @@ char pipeCommands[4][MAX];
 void addToHistory(char *lineToAdd) {
     push(lineToAdd);
     currentHistorySize++;
-    //printf("++ his: %s", lineToAdd);
 }
 
 /*
@@ -31,7 +33,8 @@ void addToHistory(char *lineToAdd) {
 void displayHistory() {
     int linesToPrint;
 
-    if (currentHistorySize <= 0) {                      // no commands yet entered
+    if (currentHistorySize <= 0)
+    {                      // no commands yet entered
         return;
     }
     else {
@@ -40,11 +43,24 @@ void displayHistory() {
 
         int16_t i;
 
-        for (i = 0; i < linesToPrint; i++) {             // print last n commands, up to a max of 10
+        for (i = 0; i < linesToPrint; i++)
+        {                                               // print last n commands, up to a max of 10
             printf("%s", pop());
         }
         resetStack();                                   // return top of stack pointer to most recently pushed item
         printf("\n");
+    }
+}
+/*
+ * The initialize function clears the global array which holds the commands parsed from the input line
+ */
+void initialize(void)
+{
+    memset(input_line, '\0', MAX);
+    int i;
+    for (i = 0; i < 3; i++)
+    {
+        memset(pipeCommands[0], '\0', MAX);
     }
 }
 
@@ -55,10 +71,10 @@ void displayHistory() {
  */
 int commandLoop() {
 
-    char input_line[MAX];                               // holds current line of input from user
+
 
     while (1) {
-        memset(input_line, '\0', MAX);
+        initialize();
         int numberIoIn = 0;
         int numberIoOut = 0;
         int numberPipes = 0;
@@ -103,6 +119,12 @@ int commandLoop() {
 
             if (numberIoIn > 0) {
                 printf("Unfortunately, time constraints prevented me from implementing this.");
+                continue;
+            }
+
+            if (numberIoOut > 1) {
+                printf("Only one '>' permitted. ");
+                continue;
             }
 
             if (((numberIoIn + numberIoOut) > 0) && (numberPipes > 0)) {
@@ -121,7 +143,6 @@ int commandLoop() {
             }
             else {
                 addToHistory(input_line);
-                int i;
                 // splits input using the pipes as the delimiter
                 char *currentChar = strtok(input_line, "|");
                 // populate pipeCommands array with the strings between the pipes, including any arguments.
@@ -141,7 +162,7 @@ int commandLoop() {
 
 int main() {
 
-    int8_t status = commandLoop();
+    int status = commandLoop();
 
     return status;
 }

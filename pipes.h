@@ -1,5 +1,5 @@
 /**
- *  nsh is a simple POSIX-compatible shell written by David Newell.
+ *  shell is a simple POSIX-compatible shell written by David Newell.
  *
  * 	Author: David Newell
  * 	SN: 250332100
@@ -17,6 +17,14 @@ void onePipe();
 
 void twoPipes();
 
+int isOutRedirect(char *);
+
+int isInRedirect(char *);
+
+void ioRedirectOutput();
+
 char **make_tokenlist(char *input);
+
+void sanitizeOut();
 
 #endif //NSH_PIPES_H

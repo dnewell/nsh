@@ -1,3 +1,10 @@
+/**
+ *  shell is a simple POSIX-compatible shell written by David Newell.
+ *
+ * 	Author: David Newell
+ * 	SN: 250332100
+ * 	For: Professor Hanan Lutfiyya
+ */
 #include "unifiedHeader.h"
 #include "pipes.h"
 
@@ -19,7 +26,7 @@ void piper(int numberOfPipes) {
 }
 
 /*
- * This function executes the command if there are no pipes in the input line
+ * This function executes a command with no pipes its string representation
  */
 void noPipes() {
 
@@ -36,11 +43,11 @@ void noPipes() {
 
         if (isOutRedirect(pipeCommands[0]))                     // check for i/o redirection char
         {
-            //TODO: redirectInput();
+            ioRedirectOutput();
         }
         else if (isInRedirect(pipeCommands[0]))
         {
-            //TODO: redirectOutput();
+
         }
         else
         {
@@ -71,7 +78,9 @@ int isInRedirect(char * charToCheck){
 }
 
 
-// The input has one pipe
+/*
+ * This function executes a command with one pipe in its string representation
+ */
 void onePipe() {
     int fileDesc[2];
 
@@ -141,16 +150,63 @@ void onePipe() {
     }
 }
 
+/*
+ * Function removes all '>' from string
+ */
+void sanitizeOut(){
+    int i;
+    for (i = 0; i < strlen(pipeCommands[0]); i++)
+    {
+        if (pipeCommands[0][i] == '>')
+        {
+            pipeCommands[0][i] = ' ';
+        }
+    }
+}
 
-// The input has two pipes
+/*
+ * Function handles i/o redirection
+ */
+void ioRedirectOutput()
+{
+
+    sanitizeOut();
+
+    char** input = make_tokenlist(pipeCommands[0]);
+
+    FILE* file = fopen(input[1], "w+");                              // open file for writing, overwriting if it exists
+
+    int des = fileno(file);                                          // gets the file descriptor
+
+/* FORK */
+    pid_t pid = fork();
+
+    if (pid > 0)                                    // in parent
+    {
+        wait(0);
+
+    }
+    else if (pid < 0)                               // error
+    {
+        printf("Error: fork() failed.");
+        exit(1);
+    }
+    else                                            // in child
+    {
+        if (dup2(des, 1) < 0)
+        {
+            printf("Error: dup2() failed.");
+            exit(1);
+        }
+        execvp(input[0], input);
+    }
+}
+
+/*
+ * This function executes a command with two pipes in its string representation
+ */
 void twoPipes() {
-    int fileDesc[2];
-    int fileDescOne[2];
 
-    pid_t pidTwo;
-    pid_t pidThree;
-    
-    
     char **process_one = make_tokenlist(pipeCommands[0]);
     char **process_two = make_tokenlist(pipeCommands[1]);
     char **process_three = make_tokenlist(pipeCommands[2]);
@@ -167,7 +223,8 @@ void twoPipes() {
         wait(0);                                                    // wait for child to return
     }
     else
-    {                                                               // now the child forks
+    {
+        int fileDesc[2];
         if (pipe(fileDesc) < 0)                                     // try pipe
         {
             printf("Error: failed to establish pipe");
@@ -182,9 +239,9 @@ void twoPipes() {
             printf("Error: fork() failed.");
             exit(1);
         }
-        else if (pidTwo > 0) // Parent process
+        else if (pidTwo > 0)                                        // parent process
         {
-            close(fileDesc[1]);                                     // in parent, redirect stdout to pipe input
+            close(fileDesc[1]);                                     // in parent: redirect stdout to pipe input
             if (dup2(fileDesc[0], 0) < 0)
             {
                 printf("Error: dup2() error");
@@ -198,17 +255,17 @@ void twoPipes() {
 
             exit(1);
         }
-        else // Child process forks again and pipes
+        else                                                        // Child process forks again and pipes
         {
-            // Pipe
+            int fileDescOne[2];
             if (pipe(fileDescOne) < 0)
             {
                 printf("Error: failed to establish pipe");
                 exit(1);
             }
 
-/* FORK 2 */
-            pidThree = fork();
+/* FORK 3 */
+            pid_t pidThree = fork();
             if (pidThree < 0) {
                 printf("Error: fork() failed.");
                 exit(1);
@@ -221,14 +278,14 @@ void twoPipes() {
 
                 if ((dup2(fileDescOne[0], 0) < 0) || (dup2(fileDesc[1], 1) < 0))
                 {
-                    printf("Error: dup2() error");
+                    printf("Error: dup2() failed");
                     exit(1);
                 }
                 wait(0);
 
                 execvp(process_two[0], process_two);
 
-                printf("Error: execvp Error");
+                printf("Error: execvp failed");
 
                 exit(1);
             }
@@ -242,7 +299,7 @@ void twoPipes() {
 
                 execvp(process_one[0], process_one);
 
-                perror("Could not exec");
+                printf("Error: execvp failed");
 
                 exit(1);
             }
@@ -258,6 +315,7 @@ void twoPipes() {
 char **make_tokenlist(char *input) {
     
     char **result = (char **) calloc(15, sizeof(char *));
+    char *token;
     char inputCopy[MAX + 1];
 
     strcpy(inputCopy, input);                    // duplicate of input, to leave input unmodified
@@ -277,8 +335,9 @@ char **make_tokenlist(char *input) {
     char *tokensSoFar = strtok(numberInputTokens, " ");
     int count = 0;
     while (*tokensSoFar)
-    {                                      // count tokens in input
+    {                                                       // count tokens in input
         *tokensSoFar = strtok(NULL, " ");
+       // tokensSoFar = strtok(NULL, " ");
         count++;
     }
 
@@ -287,17 +346,19 @@ char **make_tokenlist(char *input) {
         result[i] = (char *) calloc((MAX + 1), sizeof(char));
     }
 
-    char *token = strtok(inputCopy, " ");                   // init strtok
+    token = strtok(inputCopy, " ");                         // init strtok
 
-    for (i = 0; i < 10; i++)                               // split input on spaces
+    for (i = 0; i < 10; i++)                                // split input on spaces
     {
-        if (token == NULL) {
-            break;
+        if (token != NULL)
+        {
+            strcpy(result[i], token);
+
+            token = strtok(NULL, " ");
         }
         else
         {
-            strcpy(result[i], token);
-            token = strtok(NULL, " ");
+            break;
         }
     }
 
