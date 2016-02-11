@@ -60,7 +60,6 @@ char *pop(void)
 	char *data;
 	struct node *currentNode;
 
-
 	if (topOfStack)
 	{
 		currentNode = topOfStack;

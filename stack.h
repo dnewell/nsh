@@ -1,6 +1,10 @@
-//
-// Created by root on 2/10/16.
-//
+/**
+ *  nsh is a simple POSIX-compatible shell written by David Newell.
+ *
+ * 	Author: David Newell
+ * 	SN: 250332100
+ * 	For: Professor Hanan Lutfiyya
+ */
 
 #ifndef NSH_STACK_H
 #define NSH_STACK_H

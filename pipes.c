@@ -14,116 +14,129 @@ void piper(int numberOfPipes) {
     }
     else {
         perror("This shell only supports 2 pipes.");
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 }
 
-// no pipes
+/*
+ * This function executes the command if there are no pipes in the input line
+ */
 void noPipes() {
-    // Tokenize the input.
-    char **proc1 = tokenizeInput(pipeCommands[0]);
-    if (strcmp(proc1[0], "exit") == 0) // Check for the "exit" built-in command.
-        exit(1);
-    //shellExit();
+
+    char **process_one = make_tokenlist(pipeCommands[0]);
+
     pid_t pid = fork();
-    if (pid > 0) // Parent process
+
+    if (pid > 0)                                                // in parent
     {
         wait(0);
     }
-    else if (pid == 0) // Child process
+    else if (pid == 0)                                          // in child
     {
-//    if (strcmp(proc1[0], "history") == 0) // Check for the "history" built-in command.
-//    {
-//      // Check the argument.
-//      if (strcmp(proc1[1], "") == 0)
-//      {
-//        shellHistoryDefault();
-//      }
-//      else
-//      {
-//        int x = atoi(proc1[1]);
-//        shellHistory(x);
-//      }
-//      exit(EXIT_SUCCESS);
-//    }
-        if (strchr(pipeCommands[0], '>') != NULL) // Check for redirected input
+
+        if (isOutRedirect(pipeCommands[0]))                     // check for i/o redirection char
         {
-            //redirectInput();
+            //TODO: redirectInput();
         }
-        else if (strchr(pipeCommands[0], '<') != NULL) {
-            //redirectOutput();
-        }
-        else // All other commands
+        else if (isInRedirect(pipeCommands[0]))
         {
-            if (execvp(proc1[0], proc1) < 0);
+            //TODO: redirectOutput();
+        }
+        else
+        {
+            if (execvp(process_one[0], process_one) < 0);       // exec error
             {
-                perror("Could not exec.\n");
-                exit(EXIT_FAILURE);
+                exit(1);
             }
         }
     }
-    else // Fork failed
+    else                                                        // Fork failed
     {
-        perror("Fork failed.\n");
+        printf("Error: fork failure.");
     }
 }
+
+/*
+ * Check for > i/o redirection
+ */
+int isOutRedirect(char * charToCheck){
+    return (strchr(charToCheck, '>') != NULL);
+}
+
+/*
+ * Check for < i/o redirection
+ */
+int isInRedirect(char * charToCheck){
+    return (strchr(charToCheck, '<') != NULL);
+}
+
 
 // The input has one pipe
 void onePipe() {
-    int fds[2];
-    pid_t pid1;
-    pid_t pid2;
-    // Tokenize the input
-    char **proc1 = tokenizeInput(pipeCommands[0]);
-    char **proc2 = tokenizeInput(pipeCommands[1]);
+    int fileDesc[2];
 
-    // Pipe
-    //if (pipe(fds) < 0)
-    //  perror("Could not pipe");
+/* FORK 1 */
+    pid_t pidOne = fork();
 
-    // Initial fork
-    if ((pid1 = fork()) < 0) {
-        perror("Could not perform initial fork");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid1 > 0) // Parent process waits for child to finish
-        wait(0);
-    else // Child process forks again and pipes
+
+    char **process_one = make_tokenlist(pipeCommands[0]);
+    char **process_two = make_tokenlist(pipeCommands[1]);
+
+
+    if (pidOne < 0)
     {
-        // Pipe
-        if (pipe(fds) < 0)
-            perror("Could not pipe");
-
-
-        // Second Fork
-        if ((pid2 = fork()) < 0) // Fork and check for error.
+        printf("Error: fork() failed.");
+        exit(1);
+    }
+    else if (pidOne > 0)
+    {
+        wait(0);                                                    // wait for child to return
+    }
+    else
+    {                                                               // now the child forks
+        if (pipe(fileDesc) < 0)                                     // try pipe
         {
-            perror("Could not fork");
-            exit(EXIT_FAILURE);
+            printf("Error: failed to establish pipe");
+            exit(1);
         }
-        else if (pid2 > 0) // Parent process
+
+
+/* FORK 2 */
+        pid_t pidTwo = fork ();
+
+        if (pidTwo < 0)
         {
-            close(fds[1]); // Close read end
-            // Close stdout, redirect to the writing end of the pipe.
-            if (dup2(fds[0], 0) < 0) {
-                perror("Could not dup2");
-                exit(EXIT_FAILURE);
+            printf("Error: fork() failed.");
+            exit(1);
+        }
+        else if (pidTwo > 0)
+        {
+            close(fileDesc[1]);                                     // in parent, redirect stdout to pipe input
+            if (dup2(fileDesc[0], 0) < 0)
+            {
+                printf("Error: dup2() error");
+                exit(1);
             }
             wait(0);
-            execvp(proc2[0], proc2);
-            perror("Could not exec");
-            exit(EXIT_FAILURE);
+
+            execvp(process_two[0], process_two);
+
+            printf("Error: execvp Error");
+
+            exit(1);
         }
-        else // Child process
+        else                                                        // pid == 0, in child
         {
-            close(fds[0]);
-            if (dup2(fds[1], 1) < 0) {
-                perror("Could not dup2");
-                exit(EXIT_FAILURE);
+            close(fileDesc[0]);
+
+            if (dup2(fileDesc[1], 1) < 0)
+            {
+                exit(1);
+            } else {
+                execvp(process_one[0], process_one);                // exec
+                exit(1);
             }
-            execvp(proc1[0], proc1);
-            perror("Could not exec");
-            exit(EXIT_FAILURE);
+
         }
     }
 }
@@ -131,132 +144,162 @@ void onePipe() {
 
 // The input has two pipes
 void twoPipes() {
-    int fds1[2];
-    int fds2[2];
-    pid_t pid1;
-    pid_t pid2;
-    pid_t pid3;
-    // Tokenize the input
-    char **proc1 = tokenizeInput(pipeCommands[0]);
-    char **proc2 = tokenizeInput(pipeCommands[1]);
-    char **proc3 = tokenizeInput(pipeCommands[2]);
+    int fileDesc[2];
+    int fileDescOne[2];
 
-
-
-    // Initial fork
-    if ((pid1 = fork()) < 0) {
-        perror("Could not perform initial fork");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid1 > 0) // Parent process waits for child to finish
-        wait(0);
-
-
-    else // Child process forks again and pipes
+    pid_t pidTwo;
+    pid_t pidThree;
+    
+    
+    char **process_one = make_tokenlist(pipeCommands[0]);
+    char **process_two = make_tokenlist(pipeCommands[1]);
+    char **process_three = make_tokenlist(pipeCommands[2]);
+    
+/* FORK 1 */
+    pid_t pidOne = fork();
+    if (pidOne < 0) 
     {
-        // Pipe
-        if (pipe(fds1) < 0)
-            perror("Could not pipe");
-
-
-        // Second Fork
-        if ((pid2 = fork()) < 0) // Fork and check for error.
+        printf("Error: fork() failed.");
+        exit(1);
+    }
+    else if (pidOne > 0)
+    {
+        wait(0);                                                    // wait for child to return
+    }
+    else
+    {                                                               // now the child forks
+        if (pipe(fileDesc) < 0)                                     // try pipe
         {
-            perror("Could not fork");
-            exit(EXIT_FAILURE);
+            printf("Error: failed to establish pipe");
+            exit(1);
         }
-        else if (pid2 > 0) // Parent process
+
+/* FORK 2 */
+        pid_t pidTwo = fork();
+
+        if (pidTwo < 0)
         {
-            close(fds1[1]); // Close read end
-            // Close stdout, redirect to the writing end of the pipe.
-            if (dup2(fds1[0], 0) < 0) {
-                perror("Could not dup2");
-                exit(EXIT_FAILURE);
+            printf("Error: fork() failed.");
+            exit(1);
+        }
+        else if (pidTwo > 0) // Parent process
+        {
+            close(fileDesc[1]);                                     // in parent, redirect stdout to pipe input
+            if (dup2(fileDesc[0], 0) < 0)
+            {
+                printf("Error: dup2() error");
+                exit(1);
             }
             wait(0);
-            execvp(proc3[0], proc3);
-            perror("Could not exec");
-            exit(EXIT_FAILURE);
+
+            execvp(process_three[0], process_three);
+
+            printf("Error: execvp Error");
+
+            exit(1);
         }
-
-
         else // Child process forks again and pipes
         {
             // Pipe
-            if (pipe(fds2) < 0)
-                perror("Could not pipe");
-
-            // Third Fork
-            if ((pid3 = fork()) < 0) {
-                perror("Could not fork");
-                exit(EXIT_FAILURE);
-            }
-            else if (pid3 > 0) // Parent process
+            if (pipe(fileDescOne) < 0)
             {
-                close(fds1[0]); // Close write end of first pipe
-                close(fds2[1]); // Close read end of second pipe
-                if (dup2(fds2[0], 0) < 0) //Send stdin to
+                printf("Error: failed to establish pipe");
+                exit(1);
+            }
+
+/* FORK 2 */
+            pidThree = fork();
+            if (pidThree < 0) {
+                printf("Error: fork() failed.");
+                exit(1);
+            }
+            else if (pidThree > 0)
+            {
+                close(fileDesc[0]);                                     // in parent, redirect stdout to pipe input
+
+                close(fileDescOne[1]);                                  // pipe input closed
+
+                if ((dup2(fileDescOne[0], 0) < 0) || (dup2(fileDesc[1], 1) < 0))
                 {
-                    perror("Could not dup2");
-                    exit(EXIT_FAILURE);
-                }
-                if (dup2(fds1[1], 1) < 0) {
-                    perror("Could no dup2");
-                    exit(EXIT_FAILURE);
+                    printf("Error: dup2() error");
+                    exit(1);
                 }
                 wait(0);
-                execvp(proc2[0], proc2);
-                perror("Could not exec");
-                exit(EXIT_FAILURE);
+
+                execvp(process_two[0], process_two);
+
+                printf("Error: execvp Error");
+
+                exit(1);
             }
-            else // Child process
+            else                                                       // pid == 0, in child
             {
-                close(fds2[0]);
-                if (dup2(fds2[1], 1) < 0) {
-                    perror("Could not dup2");
-                    exit(EXIT_FAILURE);
+                close(fileDescOne[0]);
+                if (dup2(fileDescOne[1], 1) < 0)
+                {
+                    exit(1);
                 }
-                execvp(proc1[0], proc1);
+
+                execvp(process_one[0], process_one);
+
                 perror("Could not exec");
-                exit(EXIT_FAILURE);
+
+                exit(1);
             }
         }
     }
 }
 
-// Tokenizes a string according to spaces. This does not modify the original string.
-char **tokenizeInput(char *input) {
-    int i, j, k, elementcount;
-    char tempInput[MAX + 1]; // Used to preserve char* input param.
-    char countInput[MAX + 1];
+/*
+ * Tokenize a string using spaces as the delimiter.
+ * Based on the code provided on the course website,
+ * but heavily modified.
+ */
+char **make_tokenlist(char *input) {
+    
+    char **result = (char **) calloc(15, sizeof(char *));
+    char inputCopy[MAX + 1];
 
-    // Copy the input into the temp string and replace all newline chacacters with null terminators.
-    strcpy(tempInput, input);
-    for (k = 0; k < MAX + 1; k++)
-        if (tempInput[k] == '\n')
-            tempInput[k] = '\0';
-    strcpy(countInput, tempInput);
+    strcpy(inputCopy, input);                    // duplicate of input, to leave input unmodified
 
-    // Count how many elements there are in the input
-    elementcount = 0;
-    char *tempCountToken = strtok(countInput, " ");
-    while (tempCountToken) {
-        elementcount++;
-        tempCountToken = strtok(NULL, " ");
-    }
-    // Initialize the array we will return.
-    char **tokenized = (char **) calloc(10, sizeof(char *));
-    for (j = 0; j < elementcount; j++) {
-        tokenized[j] = (char *) calloc((MAX + 1), sizeof(char));
+    int i;
+    for (i = 0; i < MAX + 1; i++)                // Sanitize input.  Replace '\n' with '\0' (null)
+    {
+        if (inputCopy[i] == '\n')
+        {
+            inputCopy[i] = '\0';
+        }
     }
 
-    // Tokenize temp.
-    char *token = strtok(tempInput, " ");
-    for (i = 0; i < 10; i++) {
-        if (token == NULL)
+    char numberInputTokens[MAX + 1];
+    strcpy(numberInputTokens, inputCopy);
+
+    char *tokensSoFar = strtok(numberInputTokens, " ");
+    int count = 0;
+    while (*tokensSoFar)
+    {                                      // count tokens in input
+        *tokensSoFar = strtok(NULL, " ");
+        count++;
+    }
+
+    for (i = 0; i < count; i++)
+    {
+        result[i] = (char *) calloc((MAX + 1), sizeof(char));
+    }
+
+    char *token = strtok(inputCopy, " ");                   // init strtok
+
+    for (i = 0; i < 10; i++)                               // split input on spaces
+    {
+        if (token == NULL) {
             break;
-        strcpy(tokenized[i], token);
-        token = strtok(NULL, " ");
+        }
+        else
+        {
+            strcpy(result[i], token);
+            token = strtok(NULL, " ");
+        }
     }
-    return tokenized;
+
+    return result;
 }

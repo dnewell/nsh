@@ -17,12 +17,8 @@
 #include <errno.h>
 #include <sys/wait.h>
 
-#define MAX 256                     // maximum input line length
-#define CMD_MAX 10                  // maximum commands per line
+#define MAX 256                                 // maximum input line length
 
 extern char pipeCommands[4][MAX];				// array to contain the three commands we'll be piping
-
-
-
 
 #endif /* UNIFIEDHEADER_H_ */
